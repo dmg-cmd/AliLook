@@ -132,3 +132,8 @@ Todas las versiones siguen el estándar de versionado decimal en base 10 (`Mayor
 ### Cambios
 * Agrega detección automática de color dominante y nombre sugerido al guardar prendas en el Armario Digital
 
+
+## [0.3.5] - 2026-11-25
+### Cambios
+* Agrega guía paso a paso para conseguir modelos open source y APIs gratuitas (BYOK) en MANUAL_USUARIO.md
+

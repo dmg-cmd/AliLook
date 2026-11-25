@@ -1,6 +1,6 @@
 ﻿# Manual de Usuario y Puesta en Marcha — AliLook
 
-**Versión:** `0.3.4`
+**Versión:** `0.3.5`
 
 Este manual explica cómo instalar el servidor en tu PC con Windows, conectar tu teléfono Android y aprovechar todas las funciones de **AliLook**.
 
@@ -97,3 +97,31 @@ VTO_BYOK_GEMINI_KEY=
 VTO_CLOUD_URL=https://tu-servidor-gpu.ejemplo/api/v1/try-on
 VTO_CLOUD_TOKEN=tu_token_opcional
 ```
+
+---
+
+## 6. Cómo conseguir modelos e IAs gratuitas
+
+**AliLook** está diseñado para usarse a **costo cero**, eligiendo cualquiera de estas opciones:
+
+### Opción A: 100 % Local en tu PC (Open Source, sin límites ni API)
+* **Modelo:** *FASHN VTON v1.5* (licencia Apache 2.0).
+* **Cómo obtenerlo:** descarga los pesos públicos oficiales desde Hugging Face (`https://huggingface.co/fashn-ai/fashn-vton-1.5`) y colócalos en `models/fashn-vton-1.5/weights/model.safetensors`.
+* **Ventaja:** privacidad total (tus fotos no salen de tu red local) y sin cuotas de uso.
+
+### Opción B: API gratuita BYOK (Google AI Studio / Gemini)
+Si no tienes GPU NVIDIA en tu PC o quieres respaldo en la nube sin pagar suscripciones:
+1. Ingresa a **Google AI Studio** (`https://aistudio.google.com/`) con tu cuenta de Google.
+2. En el menú lateral selecciona **Get API key** y luego **Create API key**.
+3. Copia la clave generada (comienza con `AIza...`).
+4. En **AliLook**, toca **Motor de IA / Failover (opcional)** en la pantalla *Prueba Rápida*, elige **Nube gratuita BYOK (Gemini)** (o **Automático (Failover)**) y pega tu clave en el campo **BYOK** (se guarda solo en tu dispositivo).
+5. También puedes configurarla en `backend/.env` como `VTO_BYOK_GEMINI_KEY=AIza...`.
+
+> El nivel gratuito (*Free Tier*) de Google AI Studio no exige tarjeta de crédito para pruebas personales, sujeto a límites de peticiones por minuto/día del proveedor.
+
+### Opción C: Nodos comunitarios gratuitos (Hugging Face Spaces / ZeroGPU)
+Si tienes o compartes una instancia comunitaria en Hugging Face Spaces (o un servidor Docker autoalojado):
+* Configura su URL en `VTO_COMMUNITY_ENDPOINTS` (separadas por coma) o publica un JSON remoto en `VTO_REMOTE_ENDPOINTS_URL` con el formato:
+  ```json
+  { "endpoints": ["https://tu-espacio.hf.space/api/v1/try-on"] }
+  ```
