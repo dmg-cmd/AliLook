@@ -1,6 +1,6 @@
 ﻿# AliLook (Proyecto Ali) — Probador Virtual de Ropa con IA y Armario Digital
 
-**Versión actual:** `0.3.5`
+**Versión actual:** `0.3.6`
 
 Aplicación **100 % Open Source (FOSS)** de probador virtual de ropa (*Virtual Try-On*) y armario digital cifrado para **Android** y **PC (Windows / Linux)**, sin registros obligatorios, sin publicidad, sin marcas de agua ni suscripciones.
 
@@ -49,7 +49,7 @@ Proyecto Ali/
 ├── docs/                   # Documentación técnica, manuales e historial
 ├── scripts/                # Automatización (versionar.ps1)
 ├── iniciar_servidor.bat    # Lanzador rápido en Windows con selección de IP
-├── VERSION                 # Fuente única de versión (0.3.5)
+├── VERSION                 # Fuente única de versión (0.3.6)
 └── README.md
 ```
 
@@ -80,3 +80,10 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 cd backend
 ..\.venv\Scripts\python.exe -m pytest tests
 ```
+
+---
+
+## Apoyar el proyecto
+
+Si este proyecto te resulta útil y quieres invitarme un café:
+* [Apóyame en Ko-fi](https://ko-fi.com/dmg1552)

@@ -1,6 +1,6 @@
 ﻿# Manual de Usuario y Puesta en Marcha — AliLook
 
-**Versión:** `0.3.5`
+**Versión:** `0.3.6`
 
 Este manual explica cómo instalar el servidor en tu PC con Windows, conectar tu teléfono Android y aprovechar todas las funciones de **AliLook**.
 
@@ -125,3 +125,10 @@ Si tienes o compartes una instancia comunitaria en Hugging Face Spaces (o un ser
   ```json
   { "endpoints": ["https://tu-espacio.hf.space/api/v1/try-on"] }
   ```
+
+---
+
+## 7. Apoyar el proyecto
+
+Si **AliLook** te resulta útil y quieres colaborar con su desarrollo 100 % libre y gratuito:
+* [Invítame un café en Ko-fi](https://ko-fi.com/dmg1552)

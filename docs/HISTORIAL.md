@@ -137,3 +137,8 @@ Todas las versiones siguen el estándar de versionado decimal en base 10 (`Mayor
 ### Cambios
 * Agrega guía paso a paso para conseguir modelos open source y APIs gratuitas (BYOK) en MANUAL_USUARIO.md
 
+
+## [0.3.6] - 2026-11-25
+### Cambios
+* Agrega enlace de apoyo en Ko-fi a README.md y MANUAL_USUARIO.md
+

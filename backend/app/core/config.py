@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 APP_NAME = "AliLook - Probador Virtual VTO"
-APP_VERSION = "0.3.5"
+APP_VERSION = "0.3.6"
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 STORAGE_DIR = BASE_DIR / "storage"
