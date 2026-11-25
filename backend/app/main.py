@@ -64,6 +64,12 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon() -> FileResponse:
+    """Sirve el ícono oficial de AliLook para navegadores y WebView."""
+    return FileResponse(STATIC_DIR / "icono.png")
+
+
 @app.get("/", include_in_schema=False)
 async def inicio() -> FileResponse:
     """Sirve la interfaz web móvil ligera para pruebas desde Android sin caché."""

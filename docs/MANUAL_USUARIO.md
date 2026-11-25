@@ -1,6 +1,6 @@
 ﻿# Manual de Usuario y Puesta en Marcha — AliLook
 
-**Versión:** `0.3.6`
+**Versión:** `0.3.7`
 
 Este manual explica cómo instalar el servidor en tu PC con Windows, conectar tu teléfono Android y aprovechar todas las funciones de **AliLook**.
 

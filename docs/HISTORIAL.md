@@ -142,3 +142,8 @@ Todas las versiones siguen el estándar de versionado decimal en base 10 (`Mayor
 ### Cambios
 * Agrega enlace de apoyo en Ko-fi a README.md y MANUAL_USUARIO.md
 
+
+## [0.3.7] - 2026-11-25
+### Cambios
+* Integra el ícono oficial de AliLook en README.md, interfaz web y /favicon.ico
+
