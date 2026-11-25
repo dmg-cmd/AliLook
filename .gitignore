@@ -1,0 +1,45 @@
+# Entornos virtuales y Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+
+# Modelos de IA pesados y cachés
+models/
+checkpoints/
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.onnx
+.cache/
+
+# Archivos temporales de usuario (privacidad)
+backend/storage/uploads/
+backend/storage/outputs/
+*.tmp
+
+# Variables de entorno locales
+.env
+
+# Flutter / Android
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins*
+mobile/android/.gradle/
+mobile/android/local.properties
+
+# Borradores pesados en docs (se versionan docs/*.md)
+docs/iconos/
+docs/borradores/
+docs/investigacion/
+
+# Android nativo
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+*.apk

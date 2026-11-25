@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>AliLook — Probador Virtual</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --border: #334155;
+      --input-bg: #0f172a;
+      --sec-bg: #334155;
+      --sec-text: #f8fafc;
+      --tag-bg: #1e293b;
+      --preview-bg: #020617;
+      --danger: #ef4444;
+      --ok: #22c55e;
+    }
+    html[data-tema="claro"] {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --accent: #0284c7;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #cbd5e1;
+      --input-bg: #f8fafc;
+      --sec-bg: #e2e8f0;
+      --sec-text: #0f172a;
+      --tag-bg: #e2e8f0;
+      --preview-bg: #f8fafc;
+    }
+    @media (prefers-color-scheme: light) {
+      html[data-tema="sistema"] {
+        --bg: #f1f5f9;
+        --card: #ffffff;
+        --accent: #0284c7;
+        --text: #0f172a;
+        --muted: #475569;
+        --border: #cbd5e1;
+        --input-bg: #f8fafc;
+        --sec-bg: #e2e8f0;
+        --sec-text: #0f172a;
+        --tag-bg: #e2e8f0;
+        --preview-bg: #f8fafc;
+      }
+    }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); padding: 14px; transition: background 0.15s, color 0.15s; }
+    .container { max-width: 540px; margin: 0 auto; }
+    h1 { font-size: 1.25rem; margin: 0 0 4px; }
+    p.sub { color: var(--muted); font-size: 0.85rem; margin: 0 0 12px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+    label { display: block; font-size: 0.82rem; color: var(--muted); margin: 10px 0 4px; }
+    input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); font-size: 0.95rem; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+    .check { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; font-size: 0.85rem; }
+    .check input { width: auto; margin-top: 3px; }
+    button { width: 100%; padding: 12px; border: none; border-radius: 10px; background: var(--accent); color: #ffffff; font-weight: 700; font-size: 0.95rem; margin-top: 12px; cursor: pointer; }
+    button.sec { background: var(--sec-bg); color: var(--sec-text); margin-top: 0; font-weight: 600; font-size: 0.85rem; padding: 10px; }
+    button.peligro { background: rgba(239, 68, 68, 0.2); color: #fca5a5; margin-top: 0; font-weight: 600; font-size: 0.8rem; padding: 8px; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .preview-mini { width: 100%; max-height: 180px; object-fit: contain; border-radius: 10px; margin-top: 8px; border: 1px solid var(--border); display: none; background: var(--preview-bg); }
+    .error { color: #f87171; font-size: 0.9rem; margin-top: 8px; }
+    .ok-msg { color: #4ade80; font-size: 0.88rem; margin-top: 8px; }
+
+    /* Pestañas principales */
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .tab-btn {
+      margin-top: 0; padding: 10px; border-radius: 10px;
+      background: var(--card); color: var(--muted); border: 1px solid var(--border);
+      font-weight: 700; font-size: 0.9rem;
+    }
+    .tab-btn.activa { background: var(--accent); color: #0f172a; border-color: var(--accent); }
+    .panel { display: none; }
+    .panel.activo { display: block; }
+
+    /* Armario Digital */
+    .armario-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .prenda-card {
+      background: var(--input-bg); border: 1px solid var(--border); border-radius: 12px;
+      padding: 8px; display: flex; flex-direction: column; gap: 6px;
+    }
+    .prenda-card img {
+      width: 100%; height: 130px; object-fit: contain; border-radius: 8px; background: var(--preview-bg);
+    }
+    .prenda-titulo { font-size: 0.86rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tags { display: flex; flex-wrap: wrap; gap: 4px; }
+    .tag { font-size: 0.68rem; padding: 2px 6px; border-radius: 999px; background: var(--tag-bg); color: var(--muted); border: 1px solid var(--border); }
+    .aviso-compartida {
+      background: rgba(56, 189, 248, 0.14); border: 1px solid var(--accent);
+      color: var(--text); border-radius: 10px; padding: 8px 10px; font-size: 0.82rem;
+      margin-top: 8px; display: none;
+    }
+
+    /* Modal cámara con temporizador */
+    .overlay {
+      position: fixed; inset: 0; z-index: 9000;
+      background: #000; display: none; flex-direction: column;
+    }
+    .overlay.activo { display: flex; }
+    .cam-wrap { position: relative; flex: 1; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .cam-wrap video { width: 100%; height: 100%; object-fit: cover; }
+    .countdown {
+      position: absolute; font-size: 6rem; font-weight: 900; color: #fff;
+      text-shadow: 0 4px 24px rgba(0,0,0,0.85); pointer-events: none;
+    }
+    .cam-controls {
+      padding: 12px; background: rgba(15, 23, 42, 0.92);
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+    }
+    .cam-controls button { margin-top: 0; padding: 11px 6px; font-size: 0.85rem; }
+
+    /* Visor a pantalla completa del resultado */
+    .visor-resultado {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #000; display: none; flex-direction: column;
+    }
+    .visor-resultado.activo { display: flex; }
+    .visor-img-wrap { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 6px; }
+    .visor-img-wrap img { width: 100%; height: 100%; object-fit: contain; }
+    .visor-footer {
+      background: rgba(15, 23, 42, 0.92); padding: 10px 14px;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .badge { background: rgba(56, 189, 248, 0.2); color: var(--accent); padding: 6px 10px; border-radius: 999px; font-size: 0.82rem; font-weight: 700; }
+    .visor-footer button { width: auto; margin: 0; padding: 10px 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <h1>AliLook · Probador</h1>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button type="button" id="btn-tema" class="sec" style="width:auto;padding:5px 9px;font-size:0.75rem;border-radius:999px;" title="Cambiar tema">🌓 Sistema</button>
+        <span id="badge-version" class="badge" style="font-size:0.75rem;">v...</span>
+      </div>
+    </div>
+    <p class="sub">Prueba rápida en segundos + Armario Digital cifrado</p>
+
+    <div class="tabs">
+      <button type="button" class="tab-btn activa" id="tab-rapida">⚡ Prueba Rápida</button>
+      <button type="button" class="tab-btn" id="tab-armario">👕 Armario Digital</button>
+    </div>
+
+    <!-- BOTÓN ÚNICO DE PERFIL -->
+    <button type="button" id="btn-toggle-perfil" class="card" style="width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;background:var(--card);color:var(--text);border:1px solid var(--border);margin-top:0;margin-bottom:12px;padding:12px 14px;">
+      <div>
+        <div style="font-size:0.76rem;color:var(--muted);">Perfil utilizado (toca para cambiar o editar)</div>
+        <div id="resumen-perfil-nombre" style="font-size:0.98rem;font-weight:700;margin-top:2px;">👤 Sin perfil (toca para configurar)</div>
+      </div>
+      <span id="resumen-perfil-flecha" style="color:var(--accent);font-size:0.85rem;font-weight:700;">Abrir ▾</span>
+    </button>
+
+    <!-- EDITOR DE PERFIL (BÓVEDA + FOTO + MEDIDAS) -->
+    <div id="panel-perfil-editor" style="display:none;">
+      <div id="boveda-card" class="card" style="display:none;">
+        <label style="margin-top:0;">Perfiles cifrados en este celular (AES-256 + Huella/PIN)</label>
+        <div id="fila-perfiles-existentes" style="display:none; margin-top:6px;">
+          <select id="select-perfil" style="margin-bottom:8px;"></select>
+          <div class="btn-row">
+            <button type="button" class="sec" id="btn-cargar-perfil">Usar perfil</button>
+            <button type="button" class="sec" id="btn-borrar-perfil">Borrar perfil</button>
+          </div>
+        </div>
+        <div class="row" style="margin-top:8px; align-items:center;">
+          <input id="nombre-perfil" type="text" placeholder="Nombre (ej. Hermana)" />
+          <button type="button" class="sec" id="btn-guardar-perfil">Guardar</button>
+        </div>
+        <div class="btn-row" style="margin-top:8px;">
+          <button type="button" class="sec" id="btn-exportar-perfil">Exportar (.alilook)</button>
+          <button type="button" class="sec" id="btn-importar-perfil">Importar (.alilook)</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <label style="margin-top:0;">Tu foto frontal (cuerpo entero, buena luz)</label>
+        <div class="btn-row">
+          <button type="button" class="sec" id="btn-abrir-cam">Cámara (5s)</button>
+          <button type="button" class="sec" id="btn-elegir-galeria">Galería</button>
+        </div>
+        <input id="persona" name="persona" type="file" accept="image/*" style="display:none" />
+        <img id="preview-persona" class="preview-mini" alt="Vista previa persona" />
+
+        <div class="row">
+          <div>
+            <label for="altura_cm">Altura (cm o m, ej. 185 o 1,85)</label>
+            <input id="altura_cm" name="altura_cm" type="text" inputmode="decimal" value="172" form="tryon-form" required />
+          </div>
+          <div>
+            <label for="peso_kg">Peso (kg)</label>
+            <input id="peso_kg" name="peso_kg" type="text" inputmode="decimal" value="70" form="tryon-form" required />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="pecho_cm">Pecho / Busto (cm, opc.)</label>
+            <input id="pecho_cm" type="text" inputmode="decimal" placeholder="Ej. 108" />
+          </div>
+          <div>
+            <label for="cintura_cm">Cintura (cm, opc.)</label>
+            <input id="cintura_cm" type="text" inputmode="decimal" placeholder="Ej. 92" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="cadera_cm">Cadera (cm, opc.)</label>
+            <input id="cadera_cm" type="text" inputmode="decimal" placeholder="Ej. 106" />
+          </div>
+          <div>
+            <label for="hombros_cm">Hombros (cm, opc.)</label>
+            <input id="hombros_cm" type="text" inputmode="decimal" placeholder="Ej. 48" />
+          </div>
+        </div>
+
+        <label for="complexion">Complexión</label>
+        <select id="complexion" name="complexion" form="tryon-form">
+          <option value="delgada">Delgada</option>
+          <option value="media" selected>Media</option>
+          <option value="robusta">Robusta</option>
+        </select>
+
+        <button type="button" id="btn-cerrar-perfil-editor">Listo, pasar a elegir prenda →</button>
+      </div>
+    </div>
+
+    <!-- PANEL 1: PRUEBA RÁPIDA (ENFOCADO EN LA PRENDA) -->
+    <div id="panel-rapida" class="panel activo">
+      <form id="tryon-form" class="card">
+        <label style="margin-top:0;">Elegir prenda (cámara, galería o compartida desde otra app)</label>
+        <div class="btn-row">
+          <button type="button" class="sec" id="btn-prenda-camara">📷 Cámara</button>
+          <button type="button" class="sec" id="btn-prenda-galeria">🖼️ Galería / Archivo</button>
+        </div>
+        <input id="prenda" name="prenda" type="file" accept="image/*" style="display:none" />
+        <div id="aviso-compartida" class="aviso-compartida">
+          Imagen importada directamente desde tu celular. ¡Lista para probar!
+        </div>
+        <img id="preview-prenda" class="preview-mini" alt="Vista previa prenda" />
+        <button type="button" class="sec" id="btn-guardar-rapida-armario" style="display:none; margin-top:8px;">
+          + Guardar esta prenda en mi Armario Digital
+        </button>
+
+        <div class="row">
+          <div>
+            <label for="categoria">Categoría de prenda</label>
+            <select id="categoria" name="categoria">
+              <option value="superior" selected>Superior</option>
+              <option value="inferior">Inferior</option>
+              <option value="cuerpo_entero">Cuerpo entero</option>
+            </select>
+          </div>
+          <div>
+            <label for="elasticidad">Comportamiento del tejido</label>
+            <select id="elasticidad" name="elasticidad">
+              <option value="rigido">Rígido (denim, lino)</option>
+              <option value="medio" selected>Medio (algodón)</option>
+              <option value="elastico">Elástico (lycra, punto)</option>
+            </select>
+          </div>
+        </div>
+
+        <label for="tipo_foto_prenda">La foto de la prenda está:</label>
+        <select id="tipo_foto_prenda" name="tipo_foto_prenda">
+          <option value="model" selected>Puesta en una persona / modelo</option>
+          <option value="flat-lay">Suelta / catálogo / recortada (flat-lay)</option>
+        </select>
+
+        <button type="button" id="btn-toggle-motor" class="sec" style="margin-top:10px;text-align:left;display:flex;justify-content:space-between;align-items:center;">
+          <span>Motor de IA / Failover (opcional)</span>
+          <span id="motor-flecha">▾</span>
+        </button>
+        <div id="panel-motor" style="display:none; margin-top:8px; border:1px solid var(--border); border-radius:8px; padding:10px;">
+          <label for="proveedor" style="margin-top:0;">Modo de ejecución</label>
+          <select id="proveedor" name="proveedor">
+            <option value="">Predeterminado del servidor</option>
+            <option value="failover">Automático (Failover multi-proveedor)</option>
+            <option value="fashn_local">Solo GPU Local (FASHN VTON)</option>
+            <option value="byok_gemini">Nube gratuita BYOK (Gemini)</option>
+            <option value="simulado">Modo simulado (sin GPU)</option>
+          </select>
+          <label for="byok_api_key">Clave propia gratuita BYOK (opcional, solo local)</label>
+          <input id="byok_api_key" name="byok_api_key" type="password" placeholder="AIza... (no obligatoria)" />
+        </div>
+
+        <div class="check">
+          <input id="consentimiento" name="consentimiento_privacidad" type="checkbox" value="true" checked required />
+          <label for="consentimiento" style="margin:0; color: var(--text);">
+            Acepto el procesamiento temporal de mi imagen solo para esta prueba virtual.
+          </label>
+        </div>
+
+        <button id="btn-enviar" type="submit">Probar prenda</button>
+        <button id="btn-limpiar-cache" type="button" class="sec" style="margin-top:8px;">Limpiar caché local de pruebas</button>
+        <div id="error-msg" class="error"></div>
+      </form>
+    </div>
+
+    <!-- PANEL 2: ARMARIO DIGITAL -->
+    <div id="panel-armario" class="panel">
+      <div class="card">
+        <label style="margin-top:0;">Agregar prenda al Armario (con recorte automático)</label>
+        <input id="arm-nombre" type="text" placeholder="Nombre (ej. Camisa blanca lino)" />
+        <div class="row">
+          <div>
+            <label for="arm-categoria">Categoría</label>
+            <select id="arm-categoria">
+              <option value="superior">Superior</option>
+              <option value="inferior">Inferior</option>
+              <option value="cuerpo_entero">Cuerpo entero</option>
+            </select>
+          </div>
+          <div>
+            <label for="arm-elasticidad">Tejido</label>
+            <select id="arm-elasticidad">
+              <option value="rigido">Rígido</option>
+              <option value="medio" selected>Medio</option>
+              <option value="elastico">Elástico</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="arm-color">Color</label>
+            <select id="arm-color">
+              <option value="auto" selected>Detectar automáticamente</option>
+              <option value="negro">Negro</option>
+              <option value="blanco">Blanco</option>
+              <option value="azul">Azul</option>
+              <option value="gris">Gris</option>
+              <option value="rojo">Rojo</option>
+              <option value="verde">Verde</option>
+              <option value="beige">Beige</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div>
+            <label for="arm-clima">Clima</label>
+            <select id="arm-clima">
+              <option value="templado">Templado</option>
+              <option value="calor">Calor</option>
+              <option value="frio">Frío</option>
+              <option value="lluvia">Lluvia</option>
+            </select>
+          </div>
+        </div>
+        <label for="arm-ocasion">Ocasión</label>
+        <select id="arm-ocasion">
+          <option value="casual">Casual</option>
+          <option value="trabajo">Trabajo</option>
+          <option value="deporte">Deporte</option>
+          <option value="formal">Formal</option>
+        </select>
+        <label for="arm-archivo">Foto de la prenda</label>
+        <input id="arm-archivo" type="file" accept="image/*" />
+        <button type="button" id="btn-arm-guardar">Recortar y guardar en Armario</button>
+        <div id="arm-msg" class="ok-msg"></div>
+        <div id="arm-err" class="error"></div>
+      </div>
+
+      <div class="card">
+        <label style="margin-top:0;">Filtrar mi Armario (filtros combinables)</label>
+        <input id="fil-texto" type="text" placeholder="Buscar por nombre..." />
+        <div class="row">
+          <div>
+            <label for="fil-categoria">Categoría</label>
+            <select id="fil-categoria">
+              <option value="">Todas</option>
+              <option value="superior">Superior</option>
+              <option value="inferior">Inferior</option>
+              <option value="cuerpo_entero">Cuerpo entero</option>
+            </select>
+          </div>
+          <div>
+            <label for="fil-color">Color</label>
+            <select id="fil-color">
+              <option value="">Todos</option>
+              <option value="negro">Negro</option>
+              <option value="blanco">Blanco</option>
+              <option value="azul">Azul</option>
+              <option value="gris">Gris</option>
+              <option value="rojo">Rojo</option>
+              <option value="verde">Verde</option>
+              <option value="beige">Beige</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="fil-clima">Clima</label>
+            <select id="fil-clima">
+              <option value="">Todos</option>
+              <option value="templado">Templado</option>
+              <option value="calor">Calor</option>
+              <option value="frio">Frío</option>
+              <option value="lluvia">Lluvia</option>
+            </select>
+          </div>
+          <div>
+            <label for="fil-ocasion">Ocasión</label>
+            <select id="fil-ocasion">
+              <option value="">Todas</option>
+              <option value="casual">Casual</option>
+              <option value="trabajo">Trabajo</option>
+              <option value="deporte">Deporte</option>
+              <option value="formal">Formal</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="armario-vacio" style="color:var(--muted); font-size:0.85rem; margin-top:12px;">
+          No hay prendas que coincidan con los filtros.
+        </div>
+        <div id="armario-grid" class="armario-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cámara en vivo con temporizador -->
+  <div id="cam-overlay" class="overlay">
+    <div class="cam-wrap">
+      <video id="cam-video" autoplay playsinline muted></video>
+      <div id="cam-countdown" class="countdown"></div>
+    </div>
+    <div class="cam-controls">
+      <button type="button" class="sec" id="btn-cam-girar">Girar cámara</button>
+      <button type="button" id="btn-cam-disparar">Sacar en 5s</button>
+      <button type="button" class="sec" id="btn-cam-cerrar">Cancelar</button>
+    </div>
+  </div>
+  <canvas id="cam-canvas" style="display:none"></canvas>
+
+  <!-- Visor a pantalla completa de la foto generada -->
+  <div id="visor-resultado" class="visor-resultado">
+    <div class="visor-img-wrap">
+      <img id="img-resultado" alt="Resultado de prueba virtual" />
+    </div>
+    <div class="visor-footer">
+      <span id="badge-talle" class="badge"></span>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="sec" id="btn-visor-guardar-armario">Guardar en Armario</button>
+        <button type="button" id="btn-cerrar-visor">Salir</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("tryon-form");
+    const btnEnviar = document.getElementById("btn-enviar");
+    const err = document.getElementById("error-msg");
+    const inputPersona = document.getElementById("persona");
+    const previewPersona = document.getElementById("preview-persona");
+    const inputPrenda = document.getElementById("prenda");
+    const previewPrenda = document.getElementById("preview-prenda");
+    const avisoCompartida = document.getElementById("aviso-compartida");
+    const btnGuardarRapidaArmario = document.getElementById("btn-guardar-rapida-armario");
+
+    const camOverlay = document.getElementById("cam-overlay");
+    const camVideo = document.getElementById("cam-video");
+    const camCanvas = document.getElementById("cam-canvas");
+    const camCountdown = document.getElementById("cam-countdown");
+    const visorResultado = document.getElementById("visor-resultado");
+
+    let personaBlob = null;
+    let prendaBlob = null;
+    let prendaDesdeArmario = false;
+    let perfilActivoId = "predeterminado";
+    let perfilDesbloqueadoNombre = "";
+    let perfilModificado = false;
+    let streamActual = null;
+    let usarFrontal = true;
+    let timerId = null;
+
+    // Tema visual (Sistema / Claro / Oscuro)
+    const btnTema = document.getElementById("btn-tema");
+    const TEMAS = ["sistema", "claro", "oscuro"];
+    const ETIQUETAS_TEMA = { sistema: "🌓 Sistema", claro: "☀️ Claro", oscuro: "🌙 Oscuro" };
+    function aplicarTema(modo) {
+      const m = TEMAS.includes(modo) ? modo : "sistema";
+      document.documentElement.setAttribute("data-tema", m);
+      btnTema.textContent = ETIQUETAS_TEMA[m];
+      localStorage.setItem("alilook_tema", m);
+    }
+    aplicarTema(localStorage.getItem("alilook_tema") || "sistema");
+    btnTema.addEventListener("click", () => {
+      const actual = document.documentElement.getAttribute("data-tema") || "sistema";
+      const sig = TEMAS[(TEMAS.indexOf(actual) + 1) % TEMAS.length];
+      aplicarTema(sig);
+    });
+
+    fetch("/api/v1/salud")
+      .then(r => r.json())
+      .then(info => {
+        document.getElementById("badge-version").textContent =
+          `v${info.version} (${info.proveedor_ia})`;
+      })
+      .catch(() => {});
+
+    // Pestañas Prueba Rápida / Armario Digital
+    const tabRapida = document.getElementById("tab-rapida");
+    const tabArmario = document.getElementById("tab-armario");
+    const panelRapida = document.getElementById("panel-rapida");
+    const panelArmario = document.getElementById("panel-armario");
+
+    function activarTab(cual) {
+      const esRapida = cual === "rapida";
+      tabRapida.classList.toggle("activa", esRapida);
+      tabArmario.classList.toggle("activa", !esRapida);
+      panelRapida.classList.toggle("activo", esRapida);
+      panelArmario.classList.toggle("activo", !esRapida);
+      if (!esRapida) renderizarArmario();
+    }
+    tabRapida.addEventListener("click", () => activarTab("rapida"));
+    tabArmario.addEventListener("click", () => activarTab("armario"));
+
+    // Editor colapsable de Perfil + Botón único
+    const btnTogglePerfil = document.getElementById("btn-toggle-perfil");
+    const panelPerfilEditor = document.getElementById("panel-perfil-editor");
+    const resumenPerfilNombre = document.getElementById("resumen-perfil-nombre");
+    const resumenPerfilFlecha = document.getElementById("resumen-perfil-flecha");
+    const btnCerrarPerfilEditor = document.getElementById("btn-cerrar-perfil-editor");
+
+    function mostrarEditorPerfil(abrir) {
+      panelPerfilEditor.style.display = abrir ? "block" : "none";
+      resumenPerfilFlecha.textContent = abrir ? "Cerrar ▴" : "Editar ▾";
+    }
+
+    function actualizarResumenPerfil() {
+      const nombre = (perfilDesbloqueadoNombre || document.getElementById("nombre-perfil").value || "").trim();
+      const alt = (document.getElementById("altura_cm").value || "").trim();
+      const peso = (document.getElementById("peso_kg").value || "").trim();
+      const extra = alt && peso ? ` (${alt} cm · ${peso} kg)` : "";
+      if (nombre) {
+        resumenPerfilNombre.textContent = `👤 ${nombre}${extra}`;
+      } else if (personaBlob) {
+        resumenPerfilNombre.textContent = `👤 Foto lista${extra}`;
+      } else {
+        resumenPerfilNombre.textContent = "👤 Sin perfil (toca para configurar)";
+      }
+    }
+
+    btnTogglePerfil.addEventListener("click", () => {
+      const abierto = panelPerfilEditor.style.display === "block";
+      mostrarEditorPerfil(!abierto);
+    });
+
+    btnCerrarPerfilEditor.addEventListener("click", async () => {
+      await autoGuardarPerfilSiModificado();
+      actualizarResumenPerfil();
+      mostrarEditorPerfil(false);
+    });
+
+    // Selección de persona
+    document.getElementById("btn-elegir-galeria").addEventListener("click", () => {
+      inputPersona.removeAttribute("capture");
+      inputPersona.click();
+    });
+
+    // Botones de elección de prenda (Cámara o Galería/WhatsApp)
+    document.getElementById("btn-prenda-camara").addEventListener("click", () => {
+      inputPrenda.setAttribute("capture", "environment");
+      inputPrenda.click();
+    });
+    document.getElementById("btn-prenda-galeria").addEventListener("click", () => {
+      inputPrenda.removeAttribute("capture");
+      inputPrenda.click();
+    });
+
+    async function establecerPersonaActual(blob, guardarEnSesion = true) {
+      personaBlob = blob;
+      previewPersona.src = URL.createObjectURL(blob);
+      previewPersona.style.display = "block";
+      actualizarResumenPerfil();
+      if (guardarEnSesion && window.AndroidVault && window.AndroidVault.guardarEstadoSesion) {
+        try {
+          const b64 = await blobABase64(blob);
+          window.AndroidVault.guardarEstadoSesion("personaB64", b64);
+        } catch (_) {}
+      }
+    }
+
+    inputPersona.addEventListener("change", () => {
+      if (inputPersona.files && inputPersona.files[0]) {
+        perfilModificado = true;
+        establecerPersonaActual(inputPersona.files[0]);
+      }
+    });
+
+    // Selección de prenda manual
+    async function establecerPrendaActual(blob, esCompartida = false, desdeArmario = false, guardarEnSesion = true) {
+      prendaBlob = blob;
+      prendaDesdeArmario = desdeArmario;
+      previewPrenda.src = URL.createObjectURL(blob);
+      previewPrenda.style.display = "block";
+      avisoCompartida.style.display = esCompartida ? "block" : "none";
+      btnGuardarRapidaArmario.style.display = desdeArmario ? "none" : "block";
+      if (guardarEnSesion && window.AndroidVault && window.AndroidVault.guardarEstadoSesion) {
+        try {
+          const b64 = await blobABase64(blob);
+          window.AndroidVault.guardarEstadoSesion("prendaB64", b64);
+          window.AndroidVault.guardarEstadoSesion("prendaMime", blob.type || "image/png");
+          window.AndroidVault.guardarEstadoSesion("prendaDesdeArmario", desdeArmario ? "1" : "0");
+        } catch (_) {}
+      }
+    }
+
+    inputPrenda.addEventListener("change", () => {
+      if (inputPrenda.files && inputPrenda.files[0]) {
+        establecerPrendaActual(inputPrenda.files[0], false, false);
+      }
+    });
+
+    // Recepción de imagen compartida desde Android (Share Intent)
+    window.onPrendaCompartida = (b64, mime) => {
+      if (!b64) return;
+      const blob = base64ABlob(b64, mime || "image/jpeg");
+      activarTab("rapida");
+      establecerPrendaActual(blob, true, false);
+    };
+
+    if (window.AndroidVault && window.AndroidVault.consumirPrendaCompartida) {
+      try {
+        const raw = window.AndroidVault.consumirPrendaCompartida();
+        if (raw) {
+          const obj = JSON.parse(raw);
+          if (obj.imagenBase64) window.onPrendaCompartida(obj.imagenBase64, obj.mime);
+        }
+      } catch (_) {}
+    }
+
+    // Cámara
+    async function iniciarCamara() {
+      detenerCamara();
+      err.textContent = "";
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        err.textContent =
+          "Por Wi-Fi (HTTP) la cámara integrada está bloqueada. Usa la cámara de tu celular y activa su temporizador (5s/10s) antes de disparar.";
+        inputPersona.setAttribute("capture", "environment");
+        inputPersona.click();
+        return;
+      }
+      try {
+        streamActual = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: usarFrontal ? "user" : "environment" },
+          audio: false,
+        });
+        camVideo.srcObject = streamActual;
+        camOverlay.classList.add("activo");
+      } catch (ex) {
+        err.textContent =
+          "No se pudo abrir la cámara integrada. Usa la cámara de tu celular (activa su temporizador 5s/10s) o Galería.";
+        inputPersona.setAttribute("capture", "environment");
+        inputPersona.click();
+      }
+    }
+
+    function detenerCamara() {
+      if (timerId) { clearInterval(timerId); timerId = null; }
+      camCountdown.textContent = "";
+      if (streamActual) {
+        streamActual.getTracks().forEach(t => t.stop());
+        streamActual = null;
+      }
+      camOverlay.classList.remove("activo");
+    }
+
+    document.getElementById("btn-abrir-cam").addEventListener("click", iniciarCamara);
+    document.getElementById("btn-cam-cerrar").addEventListener("click", detenerCamara);
+    document.getElementById("btn-cam-girar").addEventListener("click", () => {
+      usarFrontal = !usarFrontal;
+      iniciarCamara();
+    });
+
+    document.getElementById("btn-cam-disparar").addEventListener("click", () => {
+      if (timerId) return;
+      let restantes = 5;
+      camCountdown.textContent = restantes;
+      timerId = setInterval(() => {
+        restantes -= 1;
+        if (restantes > 0) {
+          camCountdown.textContent = restantes;
+        } else {
+          clearInterval(timerId);
+          timerId = null;
+          camCountdown.textContent = "";
+          capturarFoto();
+        }
+      }, 1000);
+    });
+
+    function capturarFoto() {
+      const w = camVideo.videoWidth || 720;
+      const h = camVideo.videoHeight || 1280;
+      camCanvas.width = w;
+      camCanvas.height = h;
+      const ctx = camCanvas.getContext("2d");
+      if (usarFrontal) {
+        ctx.translate(w, 0);
+        ctx.scale(-1, 1);
+      }
+      ctx.drawImage(camVideo, 0, 0, w, h);
+      camCanvas.toBlob((blob) => {
+        if (blob) {
+          perfilModificado = true;
+          establecerPersonaActual(blob);
+        }
+        detenerCamara();
+      }, "image/jpeg", 0.92);
+    }
+
+    document.getElementById("btn-cerrar-visor").addEventListener("click", () => {
+      visorResultado.classList.remove("activo");
+    });
+
+    // Utilidades Base64
+    function blobABase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const res = reader.result || "";
+          resolve(String(res).split(",")[1] || "");
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    function base64ABlob(b64, mime) {
+      const bin = atob(b64);
+      const arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      return new Blob([arr], { type: mime });
+    }
+
+    // Bóveda cifrada multi-perfil en Android (AES-256-GCM + Biometría/PIN)
+    const bovedaCard = document.getElementById("boveda-card");
+    const filaPerfiles = document.getElementById("fila-perfiles-existentes");
+    const selectPerfil = document.getElementById("select-perfil");
+    const inputNombrePerfil = document.getElementById("nombre-perfil");
+    const btnCargarPerfil = document.getElementById("btn-cargar-perfil");
+    const btnGuardarPerfil = document.getElementById("btn-guardar-perfil");
+    const btnBorrarPerfil = document.getElementById("btn-borrar-perfil");
+
+    function actualizarEstadoBoveda() {
+      if (!window.AndroidVault) return;
+      bovedaCard.style.display = "block";
+      let lista = [];
+      try {
+        lista = JSON.parse(window.AndroidVault.listarPerfiles() || "[]");
+      } catch (_) {}
+
+      selectPerfil.innerHTML = "";
+      for (const p of lista) {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = p.nombre;
+        selectPerfil.appendChild(opt);
+      }
+      filaPerfiles.style.display = lista.length > 0 ? "block" : "none";
+    }
+
+    function recolectarMedidasActuales() {
+      return {
+        altura_cm: document.getElementById("altura_cm").value,
+        peso_kg: document.getElementById("peso_kg").value,
+        complexion: document.getElementById("complexion").value,
+        pecho_cm: document.getElementById("pecho_cm").value.trim(),
+        cintura_cm: document.getElementById("cintura_cm").value.trim(),
+        cadera_cm: document.getElementById("cadera_cm").value.trim(),
+        hombros_cm: document.getElementById("hombros_cm").value.trim(),
+      };
+    }
+
+    function aplicarMedidasAlFormulario(datos) {
+      if (datos.altura_cm) document.getElementById("altura_cm").value = datos.altura_cm;
+      if (datos.peso_kg) document.getElementById("peso_kg").value = datos.peso_kg;
+      if (datos.complexion) document.getElementById("complexion").value = datos.complexion;
+      document.getElementById("pecho_cm").value = datos.pecho_cm || "";
+      document.getElementById("cintura_cm").value = datos.cintura_cm || "";
+      document.getElementById("cadera_cm").value = datos.cadera_cm || "";
+      document.getElementById("hombros_cm").value = datos.hombros_cm || "";
+    }
+
+    async function autoGuardarPerfilSiModificado() {
+      if (!window.AndroidVault || !perfilDesbloqueadoNombre || !perfilModificado || !personaBlob) return;
+      try {
+        const b64 = await blobABase64(personaBlob);
+        window.AndroidVault.guardarPerfil(
+          perfilDesbloqueadoNombre,
+          JSON.stringify(recolectarMedidasActuales()),
+          b64
+        );
+        perfilModificado = false;
+      } catch (_) {}
+    }
+
+    for (const idCampo of ["altura_cm", "peso_kg", "complexion", "pecho_cm", "cintura_cm", "cadera_cm", "hombros_cm"]) {
+      document.getElementById(idCampo).addEventListener("change", () => {
+        perfilModificado = true;
+        if (window.AndroidVault && window.AndroidVault.guardarEstadoSesion) {
+          window.AndroidVault.guardarEstadoSesion("medidasJson", JSON.stringify(recolectarMedidasActuales()));
+        }
+      });
+    }
+
+    window.onPerfilesActualizados = () => actualizarEstadoBoveda();
+    window.onPerfilBorrado = () => {
+      personaBlob = null;
+      perfilDesbloqueadoNombre = "";
+      perfilModificado = false;
+      previewPersona.style.display = "none";
+      perfilActivoId = "predeterminado";
+      if (window.AndroidVault && window.AndroidVault.guardarEstadoSesion) {
+        window.AndroidVault.guardarEstadoSesion("personaB64", "");
+      }
+      actualizarEstadoBoveda();
+      actualizarResumenPerfil();
+      mostrarEditorPerfil(true);
+      renderizarArmario();
+    };
+    window.onPerfilDesbloqueado = (jsonStr, fotoB64, nombre) => {
+      try {
+        const datos = JSON.parse(jsonStr);
+        if (nombre) {
+          inputNombrePerfil.value = nombre;
+          perfilDesbloqueadoNombre = nombre;
+        }
+        if (selectPerfil.value) perfilActivoId = selectPerfil.value;
+        aplicarMedidasAlFormulario(datos);
+        if (window.AndroidVault && window.AndroidVault.guardarEstadoSesion) {
+          window.AndroidVault.guardarEstadoSesion("medidasJson", JSON.stringify(recolectarMedidasActuales()));
+          window.AndroidVault.guardarEstadoSesion("perfilActivoId", perfilActivoId);
+          window.AndroidVault.guardarEstadoSesion("perfilDesbloqueadoNombre", perfilDesbloqueadoNombre);
+        }
+        if (fotoB64) {
+          establecerPersonaActual(base64ABlob(fotoB64, "image/jpeg"), true);
+        }
+        perfilModificado = false;
+        actualizarResumenPerfil();
+        mostrarEditorPerfil(false);
+        renderizarArmario();
+      } catch (e) {
+        err.textContent = "Error al leer datos del perfil.";
+      }
+    };
+
+    if (window.AndroidVault) {
+      actualizarEstadoBoveda();
+
+      // Restaurar estado de sesión si el WebView se recargó (sin perder persona ni prenda)
+      let personaRestaurada = false;
+      if (window.AndroidVault.obtenerEstadoSesion) {
+        const pId = window.AndroidVault.obtenerEstadoSesion("perfilActivoId");
+        const pNombre = window.AndroidVault.obtenerEstadoSesion("perfilDesbloqueadoNombre");
+        if (pId) {
+          perfilActivoId = pId;
+          selectPerfil.value = pId;
+        }
+        if (pNombre) {
+          perfilDesbloqueadoNombre = pNombre;
+          inputNombrePerfil.value = pNombre;
+        }
+        const mJson = window.AndroidVault.obtenerEstadoSesion("medidasJson");
+        if (mJson) {
+          try { aplicarMedidasAlFormulario(JSON.parse(mJson)); } catch (_) {}
+        }
+        const sesPersona = window.AndroidVault.obtenerEstadoSesion("personaB64");
+        if (sesPersona) {
+          establecerPersonaActual(base64ABlob(sesPersona, "image/jpeg"), false);
+          personaRestaurada = true;
+        }
+        const sesPrenda = window.AndroidVault.obtenerEstadoSesion("prendaB64");
+        if (sesPrenda && !prendaBlob) {
+          const sesMime = window.AndroidVault.obtenerEstadoSesion("prendaMime") || "image/png";
+          const sesArm = window.AndroidVault.obtenerEstadoSesion("prendaDesdeArmario") === "1";
+          establecerPrendaActual(base64ABlob(sesPrenda, sesMime), false, sesArm, false);
+        }
+      }
+
+      // Cargar automáticamente el último perfil usado al abrir la app
+      if (!personaRestaurada && window.AndroidVault.obtenerUltimoPerfil) {
+        try {
+          const rawUlt = window.AndroidVault.obtenerUltimoPerfil();
+          if (rawUlt) {
+            const ult = JSON.parse(rawUlt);
+            if (ult.id && ult.nombre) {
+              selectPerfil.value = ult.id;
+              window.AndroidVault.desbloquearPerfil(ult.id, ult.nombre);
+            }
+          } else {
+            mostrarEditorPerfil(true);
+          }
+        } catch (_) {
+          mostrarEditorPerfil(true);
+        }
+      } else if (!personaRestaurada) {
+        mostrarEditorPerfil(true);
+      }
+      actualizarResumenPerfil();
+
+      btnCargarPerfil.addEventListener("click", async () => {
+        await autoGuardarPerfilSiModificado();
+        const opt = selectPerfil.options[selectPerfil.selectedIndex];
+        if (opt) window.AndroidVault.desbloquearPerfil(opt.value, opt.textContent);
+      });
+      window.addEventListener("pagehide", () => { autoGuardarPerfilSiModificado(); });
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") autoGuardarPerfilSiModificado();
+      });
+      btnBorrarPerfil.addEventListener("click", () => {
+        const opt = selectPerfil.options[selectPerfil.selectedIndex];
+        if (opt) window.AndroidVault.borrarPerfil(opt.value, opt.textContent);
+      });
+      btnGuardarPerfil.addEventListener("click", async () => {
+        err.textContent = "";
+        const nombre = (inputNombrePerfil.value || "").trim();
+        if (!nombre) {
+          err.textContent = "Escribe un nombre para el perfil (ej. Hermana).";
+          return;
+        }
+        if (!personaBlob) {
+          err.textContent = "Primero toma o elige la foto frontal para guardarla cifrada.";
+          return;
+        }
+        const datos = recolectarMedidasActuales();
+        const b64 = await blobABase64(personaBlob);
+        perfilDesbloqueadoNombre = nombre;
+        perfilModificado = false;
+        window.AndroidVault.guardarPerfil(nombre, JSON.stringify(datos), b64);
+      });
+
+      const btnExportarPerfil = document.getElementById("btn-exportar-perfil");
+      const btnImportarPerfil = document.getElementById("btn-importar-perfil");
+      if (btnExportarPerfil && window.AndroidVault.exportarPerfil) {
+        btnExportarPerfil.addEventListener("click", () => {
+          const opt = selectPerfil.options[selectPerfil.selectedIndex];
+          if (!opt) {
+            err.textContent = "Primero guarda o selecciona un perfil para exportar.";
+            return;
+          }
+          const pwd = prompt("Crea una contraseña para cifrar tu respaldo (.alilook, mín. 4 caracteres):");
+          if (!pwd || pwd.length < 4) return;
+          window.AndroidVault.exportarPerfil(opt.value, opt.textContent, pwd);
+        });
+      }
+      if (btnImportarPerfil && window.AndroidVault.importarPerfil) {
+        btnImportarPerfil.addEventListener("click", () => {
+          const pwd = prompt("Ingresa la contraseña del archivo de respaldo (.alilook):");
+          if (!pwd) return;
+          window.AndroidVault.importarPerfil(pwd);
+        });
+      }
+    }
+
+    // --- ARMARIO DIGITAL (Bóveda cifrada en Android o localStorage en navegador) ---
+    function claveLocalArmario() {
+      return `alilook_armario_${perfilActivoId}`;
+    }
+
+    function obtenerListaArmario() {
+      if (window.AndroidVault && window.AndroidVault.listarArmario) {
+        try {
+          return JSON.parse(window.AndroidVault.listarArmario(perfilActivoId) || "[]");
+        } catch (_) {
+          return [];
+        }
+      }
+      try {
+        return JSON.parse(localStorage.getItem(claveLocalArmario()) || "[]");
+      } catch (_) {
+        return [];
+      }
+    }
+
+    function obtenerImagenArmario(prendaId) {
+      if (window.AndroidVault && window.AndroidVault.cargarPrendaArmario) {
+        try {
+          const raw = window.AndroidVault.cargarPrendaArmario(perfilActivoId, prendaId);
+          if (!raw) return null;
+          return JSON.parse(raw).imagenBase64 || null;
+        } catch (_) {
+          return null;
+        }
+      }
+      return localStorage.getItem(`alilook_prenda_${prendaId}`);
+    }
+
+    function guardarPrendaEnAlmacen(meta, imagenB64) {
+      if (window.AndroidVault && window.AndroidVault.guardarPrendaArmario) {
+        return window.AndroidVault.guardarPrendaArmario(perfilActivoId, JSON.stringify(meta), imagenB64);
+      }
+      const id = meta.id || `p_${Date.now()}`;
+      meta.id = id;
+      const lista = obtenerListaArmario().filter(x => x.id !== id);
+      lista.unshift(meta);
+      localStorage.setItem(claveLocalArmario(), JSON.stringify(lista));
+      localStorage.setItem(`alilook_prenda_${id}`, imagenB64);
+      return id;
+    }
+
+    function eliminarPrendaDeAlmacen(prendaId) {
+      if (window.AndroidVault && window.AndroidVault.borrarPrendaArmario) {
+        window.AndroidVault.borrarPrendaArmario(perfilActivoId, prendaId);
+        return;
+      }
+      const lista = obtenerListaArmario().filter(x => x.id !== prendaId);
+      localStorage.setItem(claveLocalArmario(), JSON.stringify(lista));
+      localStorage.removeItem(`alilook_prenda_${prendaId}`);
+    }
+
+    async function recortarYGuardarPrenda(blob, meta, pedirNombre = false) {
+      const fd = new FormData();
+      fd.append("prenda", blob, "prenda.png");
+      fd.append("categoria", meta.categoria || "superior");
+      const resp = await fetch("/api/v1/prendas/recortar", { method: "POST", body: fd });
+      const json = await resp.json();
+      if (!resp.ok) throw new Error(json.detail || "No se pudo recortar la prenda");
+      if (!meta.color || meta.color === "auto") {
+        meta.color = json.color_detectado || "otro";
+      }
+      if (pedirNombre) {
+        const elegido = prompt(
+          "Nombre para guardar esta prenda en tu Armario:",
+          json.nombre_sugerido || "Prenda rápida"
+        );
+        if (!elegido) return null;
+        meta.nombre = elegido.trim();
+      } else if (!meta.nombre) {
+        meta.nombre = json.nombre_sugerido || "Prenda sin nombre";
+      }
+      return guardarPrendaEnAlmacen(meta, json.imagen_recortada_base64);
+    }
+
+    function renderizarArmario() {
+      const grid = document.getElementById("armario-grid");
+      const vacio = document.getElementById("armario-vacio");
+      const fTexto = (document.getElementById("fil-texto").value || "").trim().toLowerCase();
+      const fCat = document.getElementById("fil-categoria").value;
+      const fColor = document.getElementById("fil-color").value;
+      const fClima = document.getElementById("fil-clima").value;
+      const fOcasion = document.getElementById("fil-ocasion").value;
+
+      const filtradas = obtenerListaArmario().filter(p => {
+        if (fCat && p.categoria !== fCat) return false;
+        if (fColor && p.color !== fColor) return false;
+        if (fClima && p.clima !== fClima) return false;
+        if (fOcasion && p.ocasion !== fOcasion) return false;
+        if (fTexto && !(p.nombre || "").toLowerCase().includes(fTexto)) return false;
+        return true;
+      });
+
+      grid.innerHTML = "";
+      vacio.style.display = filtradas.length === 0 ? "block" : "none";
+
+      for (const item of filtradas) {
+        const card = document.createElement("div");
+        card.className = "prenda-card";
+
+        const img = document.createElement("img");
+        const b64 = obtenerImagenArmario(item.id);
+        if (b64) img.src = `data:image/png;base64,${b64}`;
+        img.alt = item.nombre || "Prenda";
+
+        const titulo = document.createElement("div");
+        titulo.className = "prenda-titulo";
+        titulo.textContent = item.nombre || "Sin nombre";
+
+        const tags = document.createElement("div");
+        tags.className = "tags";
+        for (const t of [item.categoria, item.color, item.clima, item.ocasion]) {
+          if (t) {
+            const sp = document.createElement("span");
+            sp.className = "tag";
+            sp.textContent = t;
+            tags.appendChild(sp);
+          }
+        }
+
+        const btnProbar = document.createElement("button");
+        btnProbar.type = "button";
+        btnProbar.style.marginTop = "4px";
+        btnProbar.style.padding = "8px";
+        btnProbar.style.fontSize = "0.82rem";
+        btnProbar.textContent = "Probar ahora";
+        btnProbar.addEventListener("click", () => {
+          if (!b64) return;
+          document.getElementById("categoria").value = item.categoria || "superior";
+          document.getElementById("elasticidad").value = item.elasticidad || "medio";
+          document.getElementById("tipo_foto_prenda").value = "flat-lay";
+          establecerPrendaActual(base64ABlob(b64, "image/png"), false, true);
+          activarTab("rapida");
+        });
+
+        const btnBorrar = document.createElement("button");
+        btnBorrar.type = "button";
+        btnBorrar.className = "peligro";
+        btnBorrar.textContent = "Eliminar";
+        btnBorrar.addEventListener("click", () => {
+          eliminarPrendaDeAlmacen(item.id);
+          renderizarArmario();
+        });
+
+        card.appendChild(img);
+        card.appendChild(titulo);
+        card.appendChild(tags);
+        card.appendChild(btnProbar);
+        card.appendChild(btnBorrar);
+        grid.appendChild(card);
+      }
+    }
+
+    for (const id of ["fil-texto", "fil-categoria", "fil-color", "fil-clima", "fil-ocasion"]) {
+      document.getElementById(id).addEventListener("input", renderizarArmario);
+      document.getElementById(id).addEventListener("change", renderizarArmario);
+    }
+
+    document.getElementById("btn-arm-guardar").addEventListener("click", async () => {
+      const armMsg = document.getElementById("arm-msg");
+      const armErr = document.getElementById("arm-err");
+      const archivoInput = document.getElementById("arm-archivo");
+      armMsg.textContent = "";
+      armErr.textContent = "";
+
+      if (!archivoInput.files || !archivoInput.files[0]) {
+        armErr.textContent = "Selecciona una foto de la prenda.";
+        return;
+      }
+      const nombre = (document.getElementById("arm-nombre").value || "").trim();
+      const meta = {
+        nombre,
+        categoria: document.getElementById("arm-categoria").value,
+        elasticidad: document.getElementById("arm-elasticidad").value,
+        color: document.getElementById("arm-color").value,
+        clima: document.getElementById("arm-clima").value,
+        ocasion: document.getElementById("arm-ocasion").value,
+      };
+      const btn = document.getElementById("btn-arm-guardar");
+      btn.disabled = true;
+      btn.textContent = "Recortando y guardando...";
+      try {
+        await recortarYGuardarPrenda(archivoInput.files[0], meta, false);
+        document.getElementById("arm-nombre").value = "";
+        archivoInput.value = "";
+        armMsg.textContent = `Guardada: ${meta.nombre} (${meta.color}).`;
+        renderizarArmario();
+      } catch (ex) {
+        armErr.textContent = ex.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Recortar y guardar en Armario";
+      }
+    });
+
+    async function guardarPrendaRapidaEnArmario() {
+      if (!prendaBlob) return;
+      try {
+        const idGuardado = await recortarYGuardarPrenda(prendaBlob, {
+          nombre: "",
+          categoria: document.getElementById("categoria").value,
+          elasticidad: document.getElementById("elasticidad").value,
+          color: "auto",
+          clima: "templado",
+          ocasion: "casual",
+        }, true);
+        if (!idGuardado) return;
+        prendaDesdeArmario = true;
+        btnGuardarRapidaArmario.style.display = "none";
+        alert("Prenda guardada en tu Armario Digital.");
+      } catch (ex) {
+        err.textContent = ex.message;
+      }
+    }
+
+    btnGuardarRapidaArmario.addEventListener("click", guardarPrendaRapidaEnArmario);
+    document.getElementById("btn-visor-guardar-armario").addEventListener("click", guardarPrendaRapidaEnArmario);
+
+    // --- CACHÉ LOCAL DE RESULTADOS TRY-ON ---
+    function hashBytesFNV1a(uint8) {
+      let h1 = 0x811c9dc5;
+      let h2 = 0x811c9dc5;
+      for (let i = 0; i < uint8.length; i++) {
+        h1 ^= uint8[i];
+        h1 = Math.imul(h1, 0x01000193);
+        h2 ^= uint8[uint8.length - 1 - i];
+        h2 = Math.imul(h2, 0x01000193);
+      }
+      return (h1 >>> 0).toString(16).padStart(8, "0") + (h2 >>> 0).toString(16).padStart(8, "0");
+    }
+
+    async function calcularClaveCacheTryOn(persona, prenda, firmaParams) {
+      const bufP = new Uint8Array(await persona.arrayBuffer());
+      const bufG = new Uint8Array(await prenda.arrayBuffer());
+      const enc = new TextEncoder().encode(firmaParams);
+      return `vto_${hashBytesFNV1a(bufP)}_${hashBytesFNV1a(bufG)}_${hashBytesFNV1a(enc)}`;
+    }
+
+    function obtenerCacheLocal(clave) {
+      if (window.AndroidVault && window.AndroidVault.obtenerCacheTryOn) {
+        try {
+          const raw = window.AndroidVault.obtenerCacheTryOn(clave);
+          return raw ? JSON.parse(raw) : null;
+        } catch (_) {
+          return null;
+        }
+      }
+      try {
+        const raw = localStorage.getItem(`alilook_cache_${clave}`);
+        return raw ? JSON.parse(raw) : null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function guardarCacheLocal(clave, json) {
+      const payload = JSON.stringify(json);
+      if (window.AndroidVault && window.AndroidVault.guardarCacheTryOn) {
+        window.AndroidVault.guardarCacheTryOn(clave, payload);
+        return;
+      }
+      try {
+        const ordenKey = "alilook_cache_orden";
+        const orden = JSON.parse(localStorage.getItem(ordenKey) || "[]").filter(k => k !== clave);
+        orden.unshift(clave);
+        while (orden.length > 8) {
+          const viejo = orden.pop();
+          localStorage.removeItem(`alilook_cache_${viejo}`);
+        }
+        localStorage.setItem(ordenKey, JSON.stringify(orden));
+        localStorage.setItem(`alilook_cache_${clave}`, payload);
+      } catch (_) {}
+    }
+
+    document.getElementById("btn-limpiar-cache").addEventListener("click", () => {
+      if (window.AndroidVault && window.AndroidVault.limpiarCacheTryOn) {
+        window.AndroidVault.limpiarCacheTryOn();
+      } else {
+        const orden = JSON.parse(localStorage.getItem("alilook_cache_orden") || "[]");
+        for (const k of orden) localStorage.removeItem(`alilook_cache_${k}`);
+        localStorage.removeItem("alilook_cache_orden");
+        alert("Caché local de pruebas limpiada.");
+      }
+    });
+
+    function mostrarResultadoTryOn(json, desdeCache) {
+      const talle = json.recomendacion_talle;
+      const sufijo = desdeCache ? " · ⚡ Caché" : ` · ${json.proveedor_ia || "IA"}`;
+      document.getElementById("badge-talle").textContent =
+        `Talle ${talle.talle_recomendado} (${talle.ajuste_estimado})${sufijo}`;
+      document.getElementById("img-resultado").src =
+        `data:image/png;base64,${json.imagen_resultado_base64}`;
+      document.getElementById("btn-visor-guardar-armario").style.display =
+        prendaDesdeArmario ? "none" : "inline-block";
+      visorResultado.classList.add("activo");
+    }
+
+    const btnToggleMotor = document.getElementById("btn-toggle-motor");
+    const panelMotor = document.getElementById("panel-motor");
+    const motorFlecha = document.getElementById("motor-flecha");
+    if (btnToggleMotor) {
+      btnToggleMotor.addEventListener("click", () => {
+        const abierto = panelMotor.style.display === "block";
+        panelMotor.style.display = abierto ? "none" : "block";
+        motorFlecha.textContent = abierto ? "▾" : "▴";
+      });
+    }
+
+    const inputByok = document.getElementById("byok_api_key");
+    if (inputByok) {
+      inputByok.value = localStorage.getItem("alilook_byok_key") || "";
+      inputByok.addEventListener("change", () => {
+        const v = inputByok.value.trim();
+        if (v) localStorage.setItem("alilook_byok_key", v);
+        else localStorage.removeItem("alilook_byok_key");
+      });
+    }
+
+    // Envío de Prueba Rápida
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      err.textContent = "";
+      if (!personaBlob) {
+        mostrarEditorPerfil(true);
+        err.textContent = "Primero completa tu foto y medidas en tu Perfil.";
+        return;
+      }
+      if (!prendaBlob) {
+        err.textContent = "Selecciona, comparte o elige una prenda de tu armario.";
+        return;
+      }
+
+      btnEnviar.disabled = true;
+      btnEnviar.textContent = "Generando prueba...";
+
+      try {
+        const data = new FormData(form);
+        let alt = (document.getElementById("altura_cm").value || "").trim().replace(",", ".");
+        if (parseFloat(alt) > 0 && parseFloat(alt) < 3) {
+          alt = String(Math.round(parseFloat(alt) * 100));
+        }
+        const peso = (document.getElementById("peso_kg").value || "").trim().replace(",", ".");
+        data.set("altura_cm", alt);
+        data.set("peso_kg", peso);
+        const medidasFirma = [];
+        for (const campo of ["pecho_cm", "cintura_cm", "cadera_cm", "hombros_cm"]) {
+          const val = (document.getElementById(campo).value || "").trim().replace(",", ".");
+          medidasFirma.push(`${campo}=${val}`);
+          if (val) {
+            data.set(campo, val);
+          } else {
+            data.delete(campo);
+          }
+        }
+        data.set("persona", personaBlob, "persona.jpg");
+        data.set("prenda", prendaBlob, "prenda.png");
+
+        const firma = [
+          alt,
+          peso,
+          document.getElementById("complexion").value,
+          document.getElementById("categoria").value,
+          document.getElementById("elasticidad").value,
+          document.getElementById("tipo_foto_prenda").value,
+          ...medidasFirma,
+        ].join("|");
+
+        const claveCache = await calcularClaveCacheTryOn(personaBlob, prendaBlob, firma);
+        const cacheado = obtenerCacheLocal(claveCache);
+        if (cacheado && cacheado.imagen_resultado_base64) {
+          mostrarResultadoTryOn(cacheado, true);
+          return;
+        }
+
+        const resp = await fetch("/api/v1/try-on", { method: "POST", body: data });
+        const json = await resp.json();
+        if (!resp.ok) throw new Error(json.detail || "Error al procesar");
+
+        guardarCacheLocal(claveCache, json);
+        mostrarResultadoTryOn(json, false);
+      } catch (ex) {
+        err.textContent = ex.message;
+      } finally {
+        btnEnviar.disabled = false;
+        btnEnviar.textContent = "Probar prenda";
+      }
+    });
+  </script>
+</body>
+</html>
