@@ -147,3 +147,8 @@ Todas las versiones siguen el estándar de versionado decimal en base 10 (`Mayor
 ### Cambios
 * Integra el ícono oficial de AliLook en README.md, interfaz web y /favicon.ico
 
+
+## [0.3.8] - 2026-11-27
+### Cambios
+* Agrega flujo de GitHub Actions para compilar APK Android y sincroniza versión en build.gradle.kts
+

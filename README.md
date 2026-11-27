@@ -4,7 +4,7 @@
 
 # AliLook (Proyecto Ali) — Probador Virtual de Ropa con IA y Armario Digital
 
-**Versión actual:** `0.3.7`
+**Versión actual:** `0.3.8`
 
 Aplicación **100 % Open Source (FOSS)** de probador virtual de ropa (*Virtual Try-On*) y armario digital cifrado para **Android** y **PC (Windows / Linux)**, sin registros obligatorios, sin publicidad, sin marcas de agua ni suscripciones.
 
@@ -53,7 +53,7 @@ Proyecto Ali/
 ├── docs/                   # Documentación técnica, manuales e historial
 ├── scripts/                # Automatización (versionar.ps1)
 ├── iniciar_servidor.bat    # Lanzador rápido en Windows con selección de IP
-├── VERSION                 # Fuente única de versión (0.3.7)
+├── VERSION                 # Fuente única de versión (0.3.8)
 └── README.md
 ```
 

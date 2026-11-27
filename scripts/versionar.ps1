@@ -46,6 +46,16 @@ if (Test-Path $configPath) {
         Set-Content $configPath -Encoding UTF8 -NoNewline
 }
 
+# Sincronizar android/app/build.gradle.kts
+$gradlePath = Join-Path $raiz "android\app\build.gradle.kts"
+if (Test-Path $gradlePath) {
+    $versionCode = ($mayor * 100) + ($medio * 10) + $inferior
+    $gradleContenido = Get-Content $gradlePath -Raw
+    $gradleContenido = $gradleContenido -replace 'versionCode\s*=\s*\d+', "versionCode = $versionCode"
+    $gradleContenido = $gradleContenido -replace 'versionName\s*=\s*"[^"]+"', "versionName = `"$nuevaVersion`""
+    Set-Content $gradlePath -Value $gradleContenido -Encoding UTF8 -NoNewline
+}
+
 # Sincronizar README.md y docs/MANUAL_USUARIO.md
 foreach ($rel in @("README.md", "docs\MANUAL_USUARIO.md")) {
     $p = Join-Path $raiz $rel

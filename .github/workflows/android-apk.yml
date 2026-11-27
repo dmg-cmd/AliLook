@@ -1,0 +1,62 @@
+name: Compilar APK Android
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Compilar APK (Debug)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Configurar Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Leer versión del proyecto
+        id: version
+        run: |
+          VERSION=$(tr -d '[:space:]' < VERSION)
+          echo "app_version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Compilar APK Debug
+        working-directory: android
+        run: gradle :app:assembleDebug --no-daemon
+
+      - name: Preparar APK con nombre de versión
+        run: |
+          VERSION="${{ steps.version.outputs.app_version }}"
+          mkdir -p dist
+          cp android/app/build/outputs/apk/debug/app-debug.apk "dist/AliLook-v${VERSION}-debug.apk"
+
+      - name: Subir APK como Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AliLook-v${{ steps.version.outputs.app_version }}-apk
+          path: dist/AliLook-v${{ steps.version.outputs.app_version }}-debug.apk
+          retention-days: 30
+
+      - name: Publicar APK en GitHub Release (solo en etiquetas v*)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/AliLook-v${{ steps.version.outputs.app_version }}-debug.apk
+          generate_release_notes: true
